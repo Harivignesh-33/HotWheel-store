@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, User, Shield } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,11 +27,48 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     lastName: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { signIn, signUp } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Will integrate with Supabase auth
-    console.log('Auth submission:', { mode, userType, formData });
-    onClose();
+    
+    if (mode === 'register' && formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      if (mode === 'login') {
+        const { error } = await signIn(formData.email, formData.password);
+        if (error) throw error;
+        
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully"
+        });
+      } else {
+        const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+        const { error } = await signUp(formData.email, formData.password, fullName, userType);
+        if (error) throw error;
+        
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account"
+        });
+      }
+      
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {

@@ -59,7 +59,7 @@ export const CarDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation cartCount={0} />
+      <Navigation />
       
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}

@@ -43,7 +43,7 @@ export const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation cartCount={0} isAuthenticated={true} userRole="admin" />
+      <Navigation />
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
