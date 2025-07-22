@@ -5,127 +5,75 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, ShoppingCart, Eye, Filter, Search } from "lucide-react";
+import { Star, ShoppingCart, Eye, Filter, Search, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
+import { carsApi } from "@/lib/api";
+import { getCarImageUrl } from "@/lib/images";
+import type { Database } from "@/lib/supabase";
 
-interface Car {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  rating: number;
-  inStock: boolean;
-  quantity: number;
-}
-
-// Mock data - will be replaced with Supabase data
-const allCars: Car[] = [
-  {
-    id: "1",
-    title: "1969 Dodge Charger R/T",
-    description: "Classic muscle car with authentic details and premium die-cast construction.",
-    price: 24.99,
-    image: "/api/placeholder/400/300",
-    category: "Classics",
-    rating: 4.8,
-    inStock: true,
-    quantity: 15
-  },
-  {
-    id: "2", 
-    title: "Lamborghini Aventador",
-    description: "Supercar perfection in 1:64 scale with opening doors and detailed interior.",
-    price: 34.99,
-    image: "/api/placeholder/400/300",
-    category: "Supercars",
-    rating: 4.9,
-    inStock: true,
-    quantity: 8
-  },
-  {
-    id: "3",
-    title: "Custom '67 Mustang",
-    description: "Limited edition custom paint job with racing stripes and performance details.",
-    price: 45.99,
-    image: "/api/placeholder/400/300", 
-    category: "Limited Edition",
-    rating: 5.0,
-    inStock: false,
-    quantity: 0
-  },
-  {
-    id: "4",
-    title: "Ferrari 488 GTB",
-    description: "Italian engineering masterpiece with detailed brake calipers and interior.",
-    price: 39.99,
-    image: "/api/placeholder/400/300",
-    category: "Supercars", 
-    rating: 4.7,
-    inStock: true,
-    quantity: 12
-  },
-  {
-    id: "5",
-    title: "Porsche 911 Turbo",
-    description: "Iconic sports car with realistic proportions and fine details.",
-    price: 32.99,
-    image: "/api/placeholder/400/300",
-    category: "Sports Cars",
-    rating: 4.6,
-    inStock: true,
-    quantity: 20
-  },
-  {
-    id: "6",
-    title: "Batmobile 1989",
-    description: "Official DC Comics licensed Batmobile from Tim Burton's Batman.",
-    price: 55.99,
-    image: "/api/placeholder/400/300",
-    category: "Entertainment",
-    rating: 4.9,
-    inStock: true,
-    quantity: 5
-  }
-];
+type Car = Database['public']['Tables']['cars']['Row'];
 
 export const CarsPage = () => {
   const navigate = useNavigate();
-  const [filteredCars, setFilteredCars] = useState(allCars);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
-
-  const categories = ["all", ...Array.from(new Set(allCars.map(car => car.category)))];
+  const [sortBy, setSortBy] = useState("featured");
+  const { addToCart } = useCart();
 
   useEffect(() => {
-    let filtered = allCars.filter(car => 
-      car.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategory === "all" || car.category === selectedCategory)
-    );
+    loadCars();
+  }, []);
 
-    // Sort cars
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "rating":
-          return b.rating - a.rating;
-        default:
-          return a.title.localeCompare(b.title);
-      }
-    });
-
-    setFilteredCars(filtered);
-  }, [searchTerm, selectedCategory, sortBy]);
-
-  const handleAddToCart = (carId: string) => {
-    console.log('Adding to cart:', carId);
-    // Will integrate with cart functionality
+  const loadCars = async () => {
+    try {
+      setLoading(true);
+      const data = await carsApi.getAll();
+      setCars(data);
+    } catch (error) {
+      console.error('Error loading cars:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const categories = ["all", ...Array.from(new Set(cars.map(car => car.category)))];
+
+  const filteredCars = cars.filter(car => {
+    const matchesSearch = car.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || car.category.toLowerCase() === selectedCategory.toLowerCase();
+    return matchesSearch && matchesCategory;
+  });
+
+  const sortedCars = [...filteredCars].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return a.price - b.price;
+      case "price-high":
+        return b.price - a.price;
+      case "name":
+        return a.name.localeCompare(b.name);
+      default:
+        return b.featured ? 1 : -1;
+    }
+  });
+
+  const handleAddToCart = async (car: Car) => {
+    await addToCart(car.id);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+          <Loader className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,10 +129,10 @@ export const CarsPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="featured">Featured</SelectItem>
                   <SelectItem value="name">Name A-Z</SelectItem>
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                   <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -201,29 +149,34 @@ export const CarsPage = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredCars.length} of {allCars.length} cars
+            Showing {sortedCars.length} of {cars.length} cars
           </p>
         </div>
 
         {/* Cars Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredCars.map((car) => (
+          {sortedCars.map((car) => (
             <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="p-0">
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img 
-                    src={car.image} 
-                    alt={car.title}
+                    src={getCarImageUrl(car.image_url)} 
+                    alt={car.name}
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 left-4">
                     <Badge variant="secondary">{car.category}</Badge>
                   </div>
-                  {!car.inStock && (
+                  {car.stock_quantity <= 0 && (
                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                       <Badge variant="outline" className="bg-background">
                         Out of Stock
                       </Badge>
+                    </div>
+                  )}
+                  {car.featured && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-gradient-primary">Featured</Badge>
                     </div>
                   )}
                 </div>
@@ -232,23 +185,23 @@ export const CarsPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-lg font-semibold line-clamp-1">
-                    {car.title}
+                    {car.name}
                   </CardTitle>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400 mr-1" />
-                    <span className="text-sm">{car.rating}</span>
+                    <span className="text-sm">4.5</span>
                   </div>
                 </div>
                 <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                  {car.description}
+                  {car.description || 'High-quality Hot Wheels die-cast car'}
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="text-xl font-bold text-primary">
                     ${car.price.toFixed(2)}
                   </div>
-                  {car.inStock && (
+                  {car.stock_quantity > 0 && (
                     <div className="text-xs text-muted-foreground">
-                      {car.quantity} in stock
+                      {car.stock_quantity} in stock
                     </div>
                   )}
                 </div>
@@ -267,8 +220,8 @@ export const CarsPage = () => {
                 <Button 
                   size="sm" 
                   className="flex-1"
-                  disabled={!car.inStock}
-                  onClick={() => handleAddToCart(car.id)}
+                  disabled={car.stock_quantity <= 0}
+                  onClick={() => handleAddToCart(car)}
                 >
                   <ShoppingCart className="h-4 w-4 mr-1" />
                   Add
@@ -278,7 +231,7 @@ export const CarsPage = () => {
           ))}
         </div>
 
-        {filteredCars.length === 0 && (
+        {sortedCars.length === 0 && (
           <div className="text-center py-16">
             <p className="text-xl text-muted-foreground mb-4">No cars found matching your criteria</p>
             <Button onClick={() => {

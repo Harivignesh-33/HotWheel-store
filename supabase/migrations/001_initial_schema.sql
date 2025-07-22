@@ -165,8 +165,13 @@ CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  INSERT INTO profiles (id, email, full_name, role)
+  VALUES (
+    NEW.id, 
+    NEW.email, 
+    NEW.raw_user_meta_data->>'full_name',
+    COALESCE(NEW.raw_user_meta_data->>'role', 'customer')
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -176,14 +181,57 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- Insert sample cars data
+-- Create collections table
+CREATE TABLE collections (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT,
+  featured BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Collections policies
+ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view collections" ON collections
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only admins can modify collections" ON collections
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+CREATE TRIGGER update_collections_updated_at BEFORE UPDATE ON collections
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert sample cars data (using imported assets)
 INSERT INTO cars (name, description, price, stock_quantity, image_url, category, featured) VALUES
-  ('Red Speedster', 'Lightning-fast red sports car with aerodynamic design', 12.99, 25, '/src/assets/cars/red-speedster.jpg', 'sports', true),
-  ('Blue Thunder Racer', 'High-performance blue racing car built for speed', 14.99, 20, '/src/assets/cars/blue-racer.jpg', 'racing', true),
-  ('Yellow Muscle Beast', 'Classic American muscle car with raw power', 13.99, 18, '/src/assets/cars/yellow-muscle.jpg', 'muscle', false),
-  ('Green Monster Truck', 'Massive off-road monster with huge wheels', 16.99, 15, '/src/assets/cars/green-monster.jpg', 'truck', true),
-  ('Black Luxury Sedan', 'Elegant luxury car with premium features', 15.99, 12, '/src/assets/cars/black-luxury.jpg', 'luxury', false),
-  ('Purple Drift King', 'Tuned drift car perfect for street racing', 17.99, 10, '/src/assets/cars/purple-drift.jpg', 'drift', false);
+  ('Red Speedster Pro', 'Lightning-fast red sports car with aerodynamic design and turbo boost', 12.99, 25, 'red-speedster.jpg', 'sports', true),
+  ('Blue Thunder Racer', 'High-performance blue racing car built for track domination', 14.99, 20, 'blue-racer.jpg', 'racing', true),
+  ('Yellow Muscle Beast', 'Classic American muscle car with 500HP raw power', 13.99, 18, 'yellow-muscle.jpg', 'muscle', false),
+  ('Green Monster Truck', 'Massive off-road monster with 44-inch wheels', 16.99, 15, 'green-monster.jpg', 'truck', true),
+  ('Black Luxury Sedan', 'Elegant luxury car with premium leather interior', 15.99, 12, 'black-luxury.jpg', 'luxury', false),
+  ('Purple Drift King', 'Tuned drift car perfect for street racing competitions', 17.99, 10, 'purple-drift.jpg', 'drift', false),
+  ('Chrome Lightning', 'Mirror-finish chrome speedster with neon underglow', 19.99, 8, 'red-speedster.jpg', 'sports', true),
+  ('Fire Dragon', 'Flame-painted muscle car with supercharged engine', 21.99, 6, 'yellow-muscle.jpg', 'muscle', true),
+  ('Ice Blue Phantom', 'Translucent blue supercar with LED light strips', 23.99, 5, 'blue-racer.jpg', 'luxury', true),
+  ('Stealth Bomber', 'Matte black tactical vehicle with armor plating', 25.99, 4, 'black-luxury.jpg', 'military', false),
+  ('Neon Drift Machine', 'Glow-in-the-dark drift car with custom body kit', 18.99, 12, 'purple-drift.jpg', 'drift', false),
+  ('Desert Storm', 'Sand-colored off-road beast built for extreme terrain', 20.99, 7, 'green-monster.jpg', 'truck', false);
+
+-- Insert sample collections
+INSERT INTO collections (name, description, image_url, featured) VALUES
+  ('Speed Demons', 'The fastest cars in our collection designed for pure speed', 'red-speedster.jpg', true),
+  ('Muscle Legends', 'Classic American muscle cars with raw horsepower', 'yellow-muscle.jpg', true),
+  ('Luxury Elite', 'Premium vehicles with top-tier comfort and style', 'black-luxury.jpg', false),
+  ('Off-Road Warriors', 'Tough trucks and vehicles built for adventure', 'green-monster.jpg', true),
+  ('Drift Masters', 'Precision-tuned cars perfect for drifting competitions', 'purple-drift.jpg', false),
+  ('Night Riders', 'Street racing legends that rule the night', 'blue-racer.jpg', false);
 
 -- Create an admin user function (to be called manually)
 CREATE OR REPLACE FUNCTION create_admin_user(user_email TEXT)

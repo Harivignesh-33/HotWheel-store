@@ -1,61 +1,76 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Star, ShoppingCart, ArrowLeft, Heart, Share2, Truck, Shield, RotateCcw } from "lucide-react";
+import { Star, ShoppingCart, ArrowLeft, Heart, Share2, Truck, Shield, RotateCcw, Loader } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { carsApi } from "@/lib/api";
+import { getCarImageUrl } from "@/lib/images";
+import type { Database } from "@/lib/supabase";
 
-// Mock data - will be replaced with Supabase data
-const carDetails = {
-  id: "1",
-  title: "1969 Dodge Charger R/T",
-  description: "This meticulously crafted 1:64 scale die-cast replica captures every detail of the legendary 1969 Dodge Charger R/T. From the iconic split grille to the distinctive tail lights, this model represents American muscle car perfection. Features opening hood, detailed engine bay, and authentic interior styling.",
-  price: 24.99,
-  images: [
-    "/api/placeholder/600/400",
-    "/api/placeholder/600/400", 
-    "/api/placeholder/600/400",
-    "/api/placeholder/600/400"
-  ],
-  category: "Classics",
-  rating: 4.8,
-  reviewCount: 127,
-  inStock: true,
-  quantity: 15,
-  sku: "HW-DOD-69-001",
-  manufacturer: "Hot Wheels",
-  scale: "1:64",
-  material: "Die-cast metal with plastic parts",
-  year: "2024",
-  series: "Car Culture",
-  features: [
-    "Opening hood with detailed engine",
-    "Real Riders wheels", 
-    "Premium card packaging",
-    "Collector number #001",
-    "Authentic livery and markings"
-  ],
-  specifications: {
-    "Length": "3 inches",
-    "Width": "1.2 inches", 
-    "Height": "1 inch",
-    "Weight": "1.5 oz",
-    "Age Range": "3+ years"
-  }
-};
+type Car = Database['public']['Tables']['cars']['Row'];
 
 export const CarDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [car, setCar] = useState<Car | null>(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
 
-  const handleAddToCart = () => {
-    console.log('Adding to cart:', { id, quantity });
-    // Will integrate with cart functionality
+  useEffect(() => {
+    if (id) {
+      loadCar(id);
+    }
+  }, [id]);
+
+  const loadCar = async (carId: string) => {
+    try {
+      setLoading(true);
+      const data = await carsApi.getById(carId);
+      setCar(data);
+    } catch (error) {
+      console.error('Error loading car:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAddToCart = async () => {
+    if (car) {
+      await addToCart(car.id, quantity);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+          <Loader className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!car) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Car Not Found</h1>
+          <Button onClick={() => navigate('/cars')}>
+            Back to Cars
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const carImage = getCarImageUrl(car.image_url);
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,9 +87,9 @@ export const CarDetailsPage = () => {
             Back to Cars
           </button>
           <span className="text-muted-foreground">/</span>
-          <span className="text-muted-foreground">{carDetails.category}</span>
+          <span className="text-muted-foreground">{car.category}</span>
           <span className="text-muted-foreground">/</span>
-          <span className="text-foreground">{carDetails.title}</span>
+          <span className="text-foreground">{car.name}</span>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
@@ -82,26 +97,23 @@ export const CarDetailsPage = () => {
           <div className="space-y-4">
             <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
               <img
-                src={carDetails.images[selectedImage]}
-                alt={carDetails.title}
+                src={carImage}
+                alt={car.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {carDetails.images.map((image, index) => (
-                <button
+              {[carImage, carImage, carImage, carImage].map((image, index) => (
+                <div
                   key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? 'border-primary' : 'border-border'
-                  }`}
+                  className="aspect-square rounded-lg overflow-hidden border-2 border-border"
                 >
                   <img
                     src={image}
-                    alt={`${carDetails.title} view ${index + 1}`}
+                    alt={`${car.name} view ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -109,9 +121,12 @@ export const CarDetailsPage = () => {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <Badge variant="secondary" className="mb-2">{carDetails.category}</Badge>
+              <Badge variant="secondary" className="mb-2">{car.category}</Badge>
+              {car.featured && (
+                <Badge className="mb-2 ml-2 bg-gradient-primary">Featured</Badge>
+              )}
               <h1 className="text-3xl font-racing font-bold text-foreground mb-2">
-                {carDetails.title}
+                {car.name}
               </h1>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center">
@@ -119,19 +134,17 @@ export const CarDetailsPage = () => {
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(carDetails.rating)
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'text-muted-foreground'
+                        i < 4 ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'
                       }`}
                     />
                   ))}
                   <span className="ml-2 text-sm text-muted-foreground">
-                    {carDetails.rating} ({carDetails.reviewCount} reviews)
+                    4.5 (156 reviews)
                   </span>
                 </div>
               </div>
               <div className="text-3xl font-bold text-primary mb-4">
-                ${carDetails.price.toFixed(2)}
+                ${car.price.toFixed(2)}
               </div>
             </div>
 
@@ -139,17 +152,17 @@ export const CarDetailsPage = () => {
 
             <div>
               <p className="text-muted-foreground leading-relaxed">
-                {carDetails.description}
+                {car.description || `This premium ${car.name} Hot Wheels die-cast car features authentic details, premium construction, and collector-quality finish. Perfect for enthusiasts and collectors alike.`}
               </p>
             </div>
 
             {/* Stock Status */}
             <div className="flex items-center gap-2">
-              {carDetails.inStock ? (
+              {car.stock_quantity > 0 ? (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-green-600 font-medium">In Stock</span>
-                  <span className="text-muted-foreground">({carDetails.quantity} available)</span>
+                  <span className="text-muted-foreground">({car.stock_quantity} available)</span>
                 </>
               ) : (
                 <>
@@ -170,8 +183,9 @@ export const CarDetailsPage = () => {
                 </button>
                 <span className="px-4 py-2 min-w-[3rem] text-center">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(Math.min(carDetails.quantity, quantity + 1))}
+                  onClick={() => setQuantity(Math.min(car.stock_quantity, quantity + 1))}
                   className="px-3 py-2 hover:bg-muted"
+                  disabled={quantity >= car.stock_quantity}
                 >
                   +
                 </button>
@@ -179,7 +193,7 @@ export const CarDetailsPage = () => {
               <Button 
                 className="flex-1" 
                 size="lg"
-                disabled={!carDetails.inStock}
+                disabled={car.stock_quantity <= 0}
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
@@ -233,7 +247,13 @@ export const CarDetailsPage = () => {
           <div>
             <h3 className="text-2xl font-bold mb-6">Features</h3>
             <ul className="space-y-2">
-              {carDetails.features.map((feature, index) => (
+              {[
+                "Die-cast metal construction",
+                "Authentic paint and tampo details",
+                "Real Riders wheels available",
+                "Premium collector packaging",
+                "Official Hot Wheels licensed product"
+              ].map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
                   <span className="text-muted-foreground">{feature}</span>
@@ -245,16 +265,26 @@ export const CarDetailsPage = () => {
           <div>
             <h3 className="text-2xl font-bold mb-6">Specifications</h3>
             <div className="space-y-3">
-              {Object.entries(carDetails.specifications).map(([key, value]) => (
-                <div key={key} className="flex justify-between">
-                  <span className="text-muted-foreground">{key}:</span>
-                  <span className="font-medium">{value}</span>
-                </div>
-              ))}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Scale:</span>
+                <span className="font-medium">1:64</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Material:</span>
+                <span className="font-medium">Die-cast metal</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Length:</span>
+                <span className="font-medium">3 inches</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Age Range:</span>
+                <span className="font-medium">3+ years</span>
+              </div>
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">SKU:</span>
-                <span className="font-mono text-sm">{carDetails.sku}</span>
+                <span className="font-mono text-sm">HW-{car.id.slice(-8).toUpperCase()}</span>
               </div>
             </div>
           </div>
