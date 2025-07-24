@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { AdminAddForm } from "@/components/AdminAddForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { carsApi, collectionsApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { 
   DollarSign, 
   Package, 
@@ -14,32 +18,47 @@ import {
   Edit, 
   Trash2,
   Search,
-  Filter
+  Filter,
+  Users,
+  Star
 } from "lucide-react";
 
-// Mock data - will be replaced with Supabase data
-const dashboardStats = {
-  totalRevenue: 45672.30,
-  totalOrders: 1284,
-  totalProducts: 156,
-  lowStockItems: 12
-};
-
-const recentOrders = [
-  { id: "ORD-001", customer: "John Smith", amount: 89.97, status: "completed", date: "2024-01-15" },
-  { id: "ORD-002", customer: "Emma Wilson", amount: 24.99, status: "processing", date: "2024-01-15" },
-  { id: "ORD-003", customer: "Mike Johnson", amount: 156.45, status: "shipped", date: "2024-01-14" },
-  { id: "ORD-004", customer: "Sarah Davis", amount: 34.99, status: "completed", date: "2024-01-14" },
-];
-
-const lowStockProducts = [
-  { id: "1", name: "1969 Dodge Charger R/T", stock: 2, price: 24.99 },
-  { id: "2", name: "Lamborghini Aventador", stock: 1, price: 34.99 },
-  { id: "3", name: "Ferrari 488 GTB", stock: 3, price: 39.99 },
-];
-
 export const AdminDashboard = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Fetch cars and collections data
+  const { data: cars = [], isLoading: carsLoading } = useQuery({
+    queryKey: ['cars'],
+    queryFn: carsApi.getAll
+  });
+
+  const { data: collections = [], isLoading: collectionsLoading } = useQuery({
+    queryKey: ['collections'],
+    queryFn: collectionsApi.getAll
+  });
+
+  // Redirect if not admin
+  if (!isAdmin && !carsLoading && !collectionsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h1>
+            <p className="text-muted-foreground">You need admin privileges to access this page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate stats from real data
+  const totalProducts = cars.length + collections.length;
+  const lowStockItems = cars.filter(car => car.stock_quantity <= 5).length;
+  const totalRevenue = cars.reduce((sum, car) => sum + (car.price * (car.stock_quantity || 0)), 0);
+  const featuredItems = cars.filter(car => car.featured).length + collections.filter(col => col.featured).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,11 +76,11 @@ export const AdminDashboard = () => {
             </p>
           </div>
           <div className="flex gap-3 mt-4 md:mt-0">
-            <Button>
+            <Button onClick={() => setShowAddForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => window.open('/cars', '_blank')}>
               <Eye className="h-4 w-4 mr-2" />
               View Store
             </Button>
@@ -76,22 +95,22 @@ export const AdminDashboard = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${dashboardStats.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+12.5%</span> from last month
+                Total inventory value
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Featured Items</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardStats.totalOrders.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{featuredItems}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+8.2%</span> from last month
+                Featured products & collections
               </p>
             </CardContent>
           </Card>
@@ -102,9 +121,9 @@ export const AdminDashboard = () => {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardStats.totalProducts}</div>
+              <div className="text-2xl font-bold">{totalProducts}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-blue-600">+5</span> added this week
+                Cars and collections
               </p>
             </CardContent>
           </Card>
@@ -115,7 +134,7 @@ export const AdminDashboard = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-amber-600">{dashboardStats.lowStockItems}</div>
+              <div className="text-2xl font-bold text-amber-600">{lowStockItems}</div>
               <p className="text-xs text-muted-foreground">
                 Items need restocking
               </p>
@@ -124,36 +143,38 @@ export const AdminDashboard = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Recent Orders */}
+          {/* Recent Cars */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Recent Orders
-                <Button variant="outline" size="sm">
+                Recent Cars
+                <Button variant="outline" size="sm" onClick={() => window.open('/admin/inventory', '_blank')}>
                   View All
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{order.id}</div>
-                      <div className="text-sm text-muted-foreground">{order.customer}</div>
-                      <div className="text-xs text-muted-foreground">{order.date}</div>
+                {cars.slice(0, 4).map((car) => (
+                  <div key={car.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={car.image_url || "/api/placeholder/50/50"} 
+                        alt={car.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                      <div>
+                        <div className="font-medium">{car.name}</div>
+                        <div className="text-sm text-muted-foreground">{car.category}</div>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">${order.amount}</div>
+                      <div className="font-medium">${car.price}</div>
                       <Badge 
-                        variant={
-                          order.status === 'completed' ? 'default' :
-                          order.status === 'processing' ? 'secondary' :
-                          order.status === 'shipped' ? 'outline' : 'destructive'
-                        }
+                        variant={car.stock_quantity > 5 ? 'default' : car.stock_quantity > 0 ? 'secondary' : 'destructive'}
                         className="text-xs"
                       >
-                        {order.status}
+                        {car.stock_quantity > 5 ? 'In Stock' : car.stock_quantity > 0 ? 'Low Stock' : 'Out of Stock'}
                       </Badge>
                     </div>
                   </div>
@@ -167,23 +188,23 @@ export const AdminDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Low Stock Items
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => window.open('/admin/inventory', '_blank')}>
                   Manage Inventory
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {cars.filter(car => car.stock_quantity <= 5 && car.stock_quantity > 0).slice(0, 4).map((car) => (
+                  <div key={car.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <div className="font-medium">{product.name}</div>
+                      <div className="font-medium">{car.name}</div>
                       <div className="text-sm text-amber-600 font-medium">
-                        Only {product.stock} left
+                        Only {car.stock_quantity} left
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">${product.price}</div>
+                      <div className="font-medium">${car.price}</div>
                       <div className="flex gap-2 mt-2">
                         <Button size="sm" variant="outline">
                           <Edit className="h-3 w-3" />
@@ -195,6 +216,9 @@ export const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
+                {cars.filter(car => car.stock_quantity <= 5).length === 0 && (
+                  <p className="text-muted-foreground text-center py-4">All items are well stocked!</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -207,25 +231,43 @@ export const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button variant="outline" className="h-20 flex-col">
+              <Button variant="outline" className="h-20 flex-col" onClick={() => setShowAddForm(true)}>
                 <Plus className="h-6 w-6 mb-2" />
                 Add Product
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button variant="outline" className="h-20 flex-col" onClick={() => window.open('/admin/inventory', '_blank')}>
                 <Package className="h-6 w-6 mb-2" />
                 Manage Inventory
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button variant="outline" className="h-20 flex-col" onClick={() => window.open('/cars', '_blank')}>
                 <ShoppingCart className="h-6 w-6 mb-2" />
-                View Orders
+                View Store
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button variant="outline" className="h-20 flex-col" onClick={() => window.open('/collections', '_blank')}>
                 <TrendingUp className="h-6 w-6 mb-2" />
-                Analytics
+                Collections
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Add Product Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <AdminAddForm 
+              isOpen={showAddForm}
+              type="car"
+              onClose={() => setShowAddForm(false)}
+              onSuccess={() => {
+                setShowAddForm(false);
+                toast({
+                  title: "Success",
+                  description: "Product added successfully",
+                });
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

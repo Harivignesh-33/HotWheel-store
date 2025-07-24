@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AdminAddForm } from "@/components/AdminAddForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { carsApi } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -20,74 +23,44 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-// Mock data - will be replaced with Supabase data
-const inventory = [
-  {
-    id: "1",
-    title: "1969 Dodge Charger R/T",
-    category: "Classics", 
-    price: 24.99,
-    quantity: 15,
-    sku: "HW-DOD-69-001",
-    status: "active",
-    image: "/api/placeholder/100/100"
-  },
-  {
-    id: "2",
-    title: "Lamborghini Aventador",
-    category: "Supercars",
-    price: 34.99,
-    quantity: 2,
-    sku: "HW-LAM-AV-002", 
-    status: "low_stock",
-    image: "/api/placeholder/100/100"
-  },
-  {
-    id: "3",
-    title: "Custom '67 Mustang",
-    category: "Limited Edition",
-    price: 45.99,
-    quantity: 0,
-    sku: "HW-MUS-67-003",
-    status: "out_of_stock",
-    image: "/api/placeholder/100/100"
-  },
-  {
-    id: "4",
-    title: "Ferrari 488 GTB",
-    category: "Supercars",
-    price: 39.99,
-    quantity: 12,
-    sku: "HW-FER-488-004",
-    status: "active",
-    image: "/api/placeholder/100/100"
-  }
-];
-
 export const AdminInventory = () => {
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    title: "",
-    description: "",
-    category: "",
-    price: "",
-    quantity: "",
-    sku: "",
-    image: ""
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Fetch cars data
+  const { data: cars = [], isLoading, refetch } = useQuery({
+    queryKey: ['cars'],
+    queryFn: carsApi.getAll
   });
+
+  // Redirect if not admin
+  if (!isAdmin && !isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h1>
+            <p className="text-muted-foreground">You need admin privileges to access this page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const categories = ["all", "Classics", "Supercars", "Limited Edition", "Sports Cars", "Entertainment"];
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredInventory = cars.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const getStatusBadge = (status: string, quantity: number) => {
+  const getStatusBadge = (quantity: number) => {
     if (quantity === 0) {
       return <Badge variant="destructive">Out of Stock</Badge>;
     } else if (quantity <= 5) {
@@ -97,24 +70,21 @@ export const AdminInventory = () => {
     }
   };
 
-  const handleAddProduct = () => {
-    console.log('Adding product:', newProduct);
-    // Will integrate with Supabase
-    setIsAddModalOpen(false);
-    setNewProduct({
-      title: "",
-      description: "",
-      category: "",
-      price: "",
-      quantity: "",
-      sku: "",
-      image: ""
-    });
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    console.log('Deleting product:', id);
-    // Will integrate with Supabase
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await carsApi.delete(id);
+      queryClient.invalidateQueries({ queryKey: ['cars'] });
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -132,111 +102,10 @@ export const AdminInventory = () => {
               Manage your Hot Wheels stock and product catalog
             </p>
           </div>
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Product</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Product Title</Label>
-                    <Input
-                      id="title"
-                      value={newProduct.title}
-                      onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
-                      placeholder="e.g., 1969 Dodge Charger R/T"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input
-                      id="sku"
-                      value={newProduct.sku}
-                      onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
-                      placeholder="e.g., HW-DOD-69-001"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                    placeholder="Detailed product description..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={newProduct.category} onValueChange={(value) => setNewProduct({...newProduct, category: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.slice(1).map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price}
-                      onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                      placeholder="24.99"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={newProduct.quantity}
-                      onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})}
-                      placeholder="15"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="image">Product Image</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="image"
-                      value={newProduct.image}
-                      onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
-                      placeholder="Image URL or upload..."
-                    />
-                    <Button variant="outline" size="icon">
-                      <Upload className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleAddProduct} className="flex-1">
-                    Add Product
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
         </div>
 
         {/* Filters */}
@@ -289,7 +158,7 @@ export const AdminInventory = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Products</p>
-                  <p className="text-2xl font-bold">{inventory.length}</p>
+                  <p className="text-2xl font-bold">{cars.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -302,7 +171,7 @@ export const AdminInventory = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">In Stock</p>
-                  <p className="text-2xl font-bold">{inventory.filter(i => i.quantity > 5).length}</p>
+                  <p className="text-2xl font-bold">{cars.filter(car => car.stock_quantity > 5).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -315,7 +184,7 @@ export const AdminInventory = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Low Stock</p>
-                  <p className="text-2xl font-bold">{inventory.filter(i => i.quantity > 0 && i.quantity <= 5).length}</p>
+                  <p className="text-2xl font-bold">{cars.filter(car => car.stock_quantity > 0 && car.stock_quantity <= 5).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -328,7 +197,7 @@ export const AdminInventory = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Out of Stock</p>
-                  <p className="text-2xl font-bold">{inventory.filter(i => i.quantity === 0).length}</p>
+                  <p className="text-2xl font-bold">{cars.filter(car => car.stock_quantity === 0).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -355,38 +224,39 @@ export const AdminInventory = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInventory.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-muted/50">
+                  {filteredInventory.map((car) => (
+                    <tr key={car.id} className="border-b hover:bg-muted/50">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img 
-                            src={item.image} 
-                            alt={item.title}
+                            src={car.image_url || "/api/placeholder/50/50"} 
+                            alt={car.name}
                             className="w-12 h-12 rounded-lg object-cover"
                           />
                           <div>
-                            <div className="font-medium">{item.title}</div>
+                            <div className="font-medium">{car.name}</div>
+                            <div className="text-sm text-muted-foreground">{car.description?.substring(0, 50)}...</div>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline">{item.category}</Badge>
+                        <Badge variant="outline">{car.category}</Badge>
                       </td>
                       <td className="p-4">
-                        <code className="text-sm bg-muted px-2 py-1 rounded">{item.sku}</code>
+                        <code className="text-sm bg-muted px-2 py-1 rounded">{car.id.substring(0, 8)}</code>
                       </td>
                       <td className="p-4">
-                        <div className="font-medium">${item.price}</div>
+                        <div className="font-medium">${car.price}</div>
                       </td>
                       <td className="p-4">
-                        <div className="font-medium">{item.quantity}</div>
+                        <div className="font-medium">{car.stock_quantity}</div>
                       </td>
                       <td className="p-4">
-                        {getStatusBadge(item.status, item.quantity)}
+                        {getStatusBadge(car.stock_quantity)}
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => window.open(`/cars/${car.id}`, '_blank')}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="sm">
@@ -395,7 +265,7 @@ export const AdminInventory = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleDeleteProduct(item.id)}
+                            onClick={() => handleDeleteProduct(car.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -408,6 +278,25 @@ export const AdminInventory = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Add Product Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <AdminAddForm 
+              isOpen={showAddForm}
+              type="car"
+              onClose={() => setShowAddForm(false)}
+              onSuccess={() => {
+                setShowAddForm(false);
+                queryClient.invalidateQueries({ queryKey: ['cars'] });
+                toast({
+                  title: "Success",
+                  description: "Product added successfully",
+                });
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
