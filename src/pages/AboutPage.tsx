@@ -14,6 +14,7 @@ import {
   Heart,
   Globe
 } from "lucide-react";
+import aboutHero from "@/assets/about-hero.jpg";
 
 export const AboutPage = () => {
   return (
@@ -62,8 +63,8 @@ export const AboutPage = () => {
           </div>
           <div className="relative">
             <img 
-              src="/api/placeholder/600/400" 
-              alt="HotWheels Pro Store"
+              src={aboutHero}
+              alt="Hot Wheels Collection"
               className="rounded-lg shadow-elegant w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
