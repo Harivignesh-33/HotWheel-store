@@ -34,6 +34,9 @@ export const CarsPage = () => {
       setCars(data);
     } catch (error) {
       console.error('Error loading cars:', error);
+      // Fallback to mock data for demo purposes
+      const { mockCars } = await import('@/lib/mockData');
+      setCars(mockCars as Car[]);
     } finally {
       setLoading(false);
     }
@@ -156,16 +159,16 @@ export const CarsPage = () => {
         {/* Cars Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedCars.map((car) => (
-            <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
+            <Card key={car.id} className="group hover:shadow-elegant hover:shadow-accent transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] bg-gradient-card border-2 hover:border-primary/20">
               <CardHeader className="p-0">
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img 
                     src={getCarImageUrl(car.image_url)} 
                     alt={car.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700 group-hover:brightness-110"
                   />
                   <div className="absolute top-4 left-4">
-                    <Badge variant="secondary">{car.category}</Badge>
+                    <Badge className="bg-background/90 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors">{car.category}</Badge>
                   </div>
                   {car.stock_quantity <= 0 && (
                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
@@ -176,7 +179,7 @@ export const CarsPage = () => {
                   )}
                   {car.featured && (
                     <div className="absolute top-4 right-4">
-                      <Badge className="bg-gradient-primary">Featured</Badge>
+                      <Badge className="bg-gradient-primary text-primary-foreground shadow-glow animate-pulse">✨ Featured</Badge>
                     </div>
                   )}
                 </div>
@@ -196,7 +199,7 @@ export const CarsPage = () => {
                   {car.description || 'High-quality Hot Wheels die-cast car'}
                 </p>
                 <div className="flex items-center justify-between">
-                  <div className="text-xl font-bold text-primary">
+                  <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                     ${car.price.toFixed(2)}
                   </div>
                   {car.stock_quantity > 0 && (

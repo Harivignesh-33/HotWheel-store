@@ -5,6 +5,8 @@ import yellowMuscle from '@/assets/cars/yellow-muscle.jpg';
 import greenMonster from '@/assets/cars/green-monster.jpg';
 import blackLuxury from '@/assets/cars/black-luxury.jpg';
 import purpleDrift from '@/assets/cars/purple-drift.jpg';
+import silverSupercar from '@/assets/cars/silver-supercar.jpg';
+import orangeSports from '@/assets/cars/orange-sports.jpg';
 
 // Image mapping for database URLs
 export const carImages: Record<string, string> = {
@@ -14,6 +16,8 @@ export const carImages: Record<string, string> = {
   'green-monster.jpg': greenMonster,
   'black-luxury.jpg': blackLuxury,
   'purple-drift.jpg': purpleDrift,
+  'silver-supercar.jpg': silverSupercar,
+  'orange-sports.jpg': orangeSports,
 };
 
 // Helper function to get image URL
