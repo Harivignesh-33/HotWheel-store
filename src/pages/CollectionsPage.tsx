@@ -7,9 +7,17 @@ import { Eye, Star, ArrowRight, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { collectionsApi } from "@/lib/api";
 import { getCollectionImageUrl } from "@/lib/images";
-import type { Database } from "@/lib/supabase";
+// Temporary types until Supabase types are regenerated
 
-type Collection = Database['public']['Tables']['collections']['Row'];
+type Collection = {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 export const CollectionsPage = () => {
   const navigate = useNavigate();

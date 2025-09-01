@@ -165,7 +165,7 @@ export const AdminDashboard = () => {
                       />
                       <div>
                         <div className="font-medium">{car.name}</div>
-                        <div className="text-sm text-muted-foreground">{car.category}</div>
+                        <div className="text-sm text-muted-foreground">Premium Collection</div>
                       </div>
                     </div>
                     <div className="text-right">

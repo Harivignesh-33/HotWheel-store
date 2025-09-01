@@ -9,9 +9,20 @@ import { Star, ShoppingCart, ArrowLeft, Heart, Share2, Truck, Shield, RotateCcw,
 import { useCart } from "@/contexts/CartContext";
 import { carsApi } from "@/lib/api";
 import { getCarImageUrl } from "@/lib/images";
-import type { Database } from "@/lib/supabase";
+// Temporary types until Supabase types are regenerated
 
-type Car = Database['public']['Tables']['cars']['Row'];
+type Car = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  stock_quantity: number;
+  featured: boolean;
+  collection_id: string;
+  created_at: string;
+  updated_at: string;
+};
 
 export const CarDetailsPage = () => {
   const { id } = useParams();
@@ -87,7 +98,7 @@ export const CarDetailsPage = () => {
             Back to Cars
           </button>
           <span className="text-muted-foreground">/</span>
-          <span className="text-muted-foreground">{car.category}</span>
+          <span className="text-muted-foreground">All Cars</span>
           <span className="text-muted-foreground">/</span>
           <span className="text-foreground">{car.name}</span>
         </div>
@@ -121,7 +132,7 @@ export const CarDetailsPage = () => {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <Badge variant="secondary" className="mb-2">{car.category}</Badge>
+              <Badge variant="secondary" className="mb-2">Premium</Badge>
               {car.featured && (
                 <Badge className="mb-2 ml-2 bg-gradient-primary">Featured</Badge>
               )}

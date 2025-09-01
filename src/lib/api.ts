@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import type { Database } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Collection = Database['public']['Tables']['collections']['Row'];

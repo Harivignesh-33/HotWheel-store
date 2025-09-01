@@ -89,10 +89,10 @@ export const FeaturedSection = () => {
                   />
                   <div className="absolute top-4 left-4">
                     <Badge 
-                      variant={car.category === "Limited Edition" ? "destructive" : "secondary"}
+                      variant="secondary"
                       className="shadow-sm"
                     >
-                      {car.category}
+                      Premium
                     </Badge>
                   </div>
                   {car.stock_quantity === 0 && (

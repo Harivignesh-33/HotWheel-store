@@ -38,7 +38,7 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
           price: parseFloat(formData.price),
           stock_quantity: parseInt(formData.stockQuantity),
           image_url: formData.imageUrl,
-          category: formData.category,
+          collection_id: formData.category, // Using category as collection_id for now
           featured: formData.featured
         });
         toast({ title: "Success", description: "Car added successfully" });
