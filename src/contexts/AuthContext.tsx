@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 
 interface Profile {
   id: string
+  user_id: string
   email: string
   full_name: string | null
   role: 'customer' | 'admin'
@@ -71,11 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single()
 
       if (error) throw error
-      setProfile(data)
+      setProfile(data as Profile)
     } catch (error) {
       console.error('Error fetching profile:', error)
     } finally {
@@ -85,10 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string, role: 'customer' | 'admin' = 'customer') => {
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             role: role
