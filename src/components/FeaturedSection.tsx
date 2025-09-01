@@ -1,207 +1,214 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, ShoppingCart, Eye } from "lucide-react";
+import { Star, ShoppingCart, Eye, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { carsApi, collectionsApi } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { carsApi, collectionsApi } from "@/lib/api";
+
+type Car = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  stock_quantity: number;
+  featured: boolean;
+  collection_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type Collection = {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 export const FeaturedSection = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { addToCart } = useCart();
-  const { toast } = useToast();
+  const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
+  const [featuredCollections, setFeaturedCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch featured cars and collections
-  const { data: featuredCars = [] } = useQuery({
-    queryKey: ['featured-cars'],
-    queryFn: carsApi.getFeatured
-  });
+  useEffect(() => {
+    fetchFeaturedData();
+  }, []);
 
-  const { data: featuredCollections = [] } = useQuery({
-    queryKey: ['featured-collections'], 
-    queryFn: collectionsApi.getFeatured
-  });
-
-  const handleViewDetails = (carId: string) => {
-    navigate(`/cars/${carId}`);
+  const fetchFeaturedData = async () => {
+    try {
+      const [carsData, collectionsData] = await Promise.all([
+        carsApi.getFeatured(),
+        collectionsApi.getFeatured()
+      ]);
+      setFeaturedCars(carsData as Car[]);
+      setFeaturedCollections(collectionsData as Collection[]);
+    } catch (error) {
+      console.error('Error fetching featured data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddToCart = async (carId: string) => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to add items to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await addToCart(carId);
-      toast({
-        title: "Added to Cart",
-        description: "Item has been added to your cart",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart",
-        variant: "destructive",
-      });
-    }
+    await addToCart(carId, 1);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-16">
+        <Loader className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4">
-            Featured Collection
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-racing font-bold text-foreground mb-6">
-            Premium Picks
+    <div className="space-y-16 animate-fade-in">
+      {/* Featured Collections */}
+      <section>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-racing font-bold text-foreground mb-4 animate-fade-in">
+            Featured Collections
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Hand-selected die-cast masterpieces from our exclusive collection. 
-            Each model represents the pinnacle of craftsmanship and attention to detail.
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            Discover our most popular Hot Wheels collections, each with unique designs and thrilling stories
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {featuredCollections.map((collection, index) => (
+            <Card 
+              key={collection.id} 
+              className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale cursor-pointer animate-fade-in"
+              style={{ animationDelay: `${index * 0.2}s` }}
+              onClick={() => navigate('/collections')}
+            >
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={collection.image_url}
+                  alt={collection.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
+                    Collection
+                  </Badge>
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors story-link">
+                  {collection.name}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {collection.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Cars */}
+      <section>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-racing font-bold text-foreground mb-4 animate-fade-in">
+            Featured Hot Wheels
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            The hottest die-cast cars in our collection, featuring premium details and authentic designs
           </p>
         </div>
 
-        {/* Featured Cars Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {featuredCars.slice(0, 6).map((car, index) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featuredCars.map((car, index) => (
             <Card 
               key={car.id} 
-              className="group hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 bg-card border-border animate-fade-in"
-              style={{ animationDelay: `${index * 200}ms` }}
+              className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale animate-fade-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardHeader className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img 
-                    src={car.image_url || "/api/placeholder/400/300"} 
-                    alt={car.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <Badge 
-                      variant="secondary"
-                      className="shadow-sm"
-                    >
-                      Premium
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={car.image_url}
+                  alt={car.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute top-4 left-4">
+                  <Badge 
+                    variant="secondary"
+                    className="shadow-sm bg-background/90 backdrop-blur-sm animate-pulse"
+                  >
+                    🔥 Featured
+                  </Badge>
+                </div>
+                {car.stock_quantity === 0 && (
+                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                    <Badge variant="outline" className="bg-background">
+                      Out of Stock
                     </Badge>
                   </div>
-                  {car.stock_quantity === 0 && (
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                      <Badge variant="outline" className="bg-background">
-                        Out of Stock
-                      </Badge>
-                    </div>
-                  )}
+                )}
+                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-8 w-8 p-0 bg-background/90 backdrop-blur-sm hover-scale"
+                    onClick={() => navigate(`/cars/${car.id}`)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardHeader>
-
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {car.name}
-                  </CardTitle>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400 mr-1" />
+              </div>
+              
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors story-link">
+                  {car.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                  {car.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-primary">
+                    ${car.price}
+                  </span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm text-muted-foreground">4.8</span>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                  {car.description}
-                </p>
-                <div className="text-2xl font-bold text-primary">
-                  ${car.price.toFixed(2)}
-                </div>
               </CardContent>
-
-              <CardFooter className="p-6 pt-0 flex gap-3">
+              
+              <CardFooter className="p-4 pt-0">
                 <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => handleViewDetails(car.id)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="flex-1"
-                  disabled={car.stock_quantity === 0}
+                  className="w-full transition-all duration-300 hover:shadow-glow hover-scale"
                   onClick={() => handleAddToCart(car.id)}
+                  disabled={car.stock_quantity === 0}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
+                  {car.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
 
-        {/* Featured Collections Section */}
-        {featuredCollections.length > 0 && (
-          <>
-            <div className="text-center mb-12">
-              <Badge variant="outline" className="mb-4">
-                Featured Collections
-              </Badge>
-              <h3 className="text-3xl md:text-4xl font-racing font-bold text-foreground mb-6">
-                Curated Collections
-              </h3>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              {featuredCollections.slice(0, 4).map((collection) => (
-                <Card key={collection.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300">
-                  <div className="relative">
-                    <img 
-                      src={collection.image_url || "/api/placeholder/400/250"} 
-                      alt={collection.name}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <h3 className="font-racing font-bold text-2xl mb-2">{collection.name}</h3>
-                      <p className="text-gray-200 mb-3">{collection.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {collection.featured && (
-                            <Badge variant="secondary">Featured</Badge>
-                          )}
-                        </div>
-                        <Button variant="secondary" size="sm" className="gap-2" onClick={() => navigate('/collections')}>
-                          Explore <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* View All Button */}
-        <div className="text-center">
+        <div className="text-center mt-12">
           <Button 
-            size="lg" 
+            variant="outline" 
+            size="lg"
             onClick={() => navigate('/cars')}
-            className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
+            className="hover-scale transition-all duration-300 hover:shadow-elegant animate-fade-in"
           >
-            View All Cars
-            <Eye className="ml-2 h-5 w-5" />
+            View All Hot Wheels Cars
           </Button>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 };
