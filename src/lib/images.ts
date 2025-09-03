@@ -23,7 +23,11 @@ export const carImages: Record<string, string> = {
 // Helper function to get image URL
 export const getCarImageUrl = (imageUrl: string | null): string => {
   if (!imageUrl) return redSpeedster; // fallback
-  return carImages[imageUrl] || redSpeedster;
+  
+  // Extract filename from full path if needed
+  const filename = imageUrl.includes('/') ? imageUrl.split('/').pop() || '' : imageUrl;
+  
+  return carImages[filename] || redSpeedster;
 };
 
 // Helper function for collections - they can use car images for now

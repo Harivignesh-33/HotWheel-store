@@ -31,10 +31,13 @@ export const CollectionsPage = () => {
   const loadCollections = async () => {
     try {
       setLoading(true);
+      console.log('Loading collections...');
       const data = await collectionsApi.getAll();
+      console.log('Collections loaded:', data.length);
       setCollections(data);
     } catch (error) {
       console.error('Error loading collections:', error);
+      setCollections([]);
     } finally {
       setLoading(false);
     }

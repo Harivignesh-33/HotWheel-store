@@ -41,13 +41,13 @@ export const CarsPage = () => {
   const loadCars = async () => {
     try {
       setLoading(true);
+      console.log('Loading cars...');
       const data = await carsApi.getAll();
+      console.log('Cars loaded:', data.length);
       setCars(data);
     } catch (error) {
       console.error('Error loading cars:', error);
-      // Fallback to mock data for demo purposes
-      const { mockCars } = await import('@/lib/mockData');
-      setCars(mockCars as any);
+      setCars([]);
     } finally {
       setLoading(false);
     }

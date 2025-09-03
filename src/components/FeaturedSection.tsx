@@ -44,14 +44,20 @@ export const FeaturedSection = () => {
 
   const fetchFeaturedData = async () => {
     try {
+      console.log('Fetching featured data...');
       const [carsData, collectionsData] = await Promise.all([
         carsApi.getFeatured(),
         collectionsApi.getFeatured()
       ]);
+      console.log('Featured cars:', carsData.length);
+      console.log('Featured collections:', collectionsData.length);
       setFeaturedCars(carsData as Car[]);
       setFeaturedCollections(collectionsData as Collection[]);
     } catch (error) {
       console.error('Error fetching featured data:', error);
+      // Set empty arrays on error
+      setFeaturedCars([]);
+      setFeaturedCollections([]);
     } finally {
       setLoading(false);
     }
