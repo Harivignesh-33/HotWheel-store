@@ -6,6 +6,7 @@ import { Star, ShoppingCart, Eye, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { carsApi, collectionsApi } from "@/lib/api";
+import { getCarImageUrl, getCollectionImageUrl } from "@/lib/images";
 
 type Car = {
   id: string;
@@ -91,7 +92,7 @@ export const FeaturedSection = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={collection.image_url}
+                  src={getCollectionImageUrl(collection.image_url)}
                   alt={collection.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -130,12 +131,13 @@ export const FeaturedSection = () => {
           {featuredCars.map((car, index) => (
             <Card 
               key={car.id} 
-              className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale animate-fade-in"
+              className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale animate-fade-in cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
+              onClick={() => navigate(`/cars/${car.id}`)}
             >
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={car.image_url}
+                  src={getCarImageUrl(car.image_url)}
                   alt={car.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -187,7 +189,10 @@ export const FeaturedSection = () => {
               <CardFooter className="p-4 pt-0">
                 <Button 
                   className="w-full transition-all duration-300 hover:shadow-glow hover-scale"
-                  onClick={() => handleAddToCart(car.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(car.id);
+                  }}
                   disabled={car.stock_quantity === 0}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />

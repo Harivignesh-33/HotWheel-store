@@ -170,7 +170,11 @@ export const CarsPage = () => {
         {/* Cars Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedCars.map((car) => (
-            <Card key={car.id} className="group hover:shadow-elegant hover:shadow-accent transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] bg-gradient-card border-2 hover:border-primary/20">
+            <Card 
+              key={car.id} 
+              className="group hover:shadow-elegant hover:shadow-accent transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] bg-gradient-card border-2 hover:border-primary/20 cursor-pointer"
+              onClick={() => navigate(`/cars/${car.id}`)}
+            >
               <CardHeader className="p-0">
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img 
@@ -226,7 +230,10 @@ export const CarsPage = () => {
                   variant="outline" 
                   size="sm" 
                   className="flex-1"
-                  onClick={() => navigate(`/cars/${car.id}`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/cars/${car.id}`);
+                  }}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   View
@@ -235,7 +242,10 @@ export const CarsPage = () => {
                   size="sm" 
                   className="flex-1"
                   disabled={car.stock_quantity <= 0}
-                  onClick={() => handleAddToCart(car)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(car);
+                  }}
                 >
                   <ShoppingCart className="h-4 w-4 mr-1" />
                   Add

@@ -108,13 +108,13 @@ export const CarDetailsPage = () => {
           <div className="space-y-4">
             <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
               <img
-                src={carImage}
+                src={getCarImageUrl(car.image_url)}
                 alt={car.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {[carImage, carImage, carImage, carImage].map((image, index) => (
+              {[getCarImageUrl(car.image_url), getCarImageUrl(car.image_url), getCarImageUrl(car.image_url), getCarImageUrl(car.image_url)].map((image, index) => (
                 <div
                   key={index}
                   className="aspect-square rounded-lg overflow-hidden border-2 border-border"
