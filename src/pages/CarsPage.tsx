@@ -40,16 +40,23 @@ export const CarsPage = () => {
 
   const loadCars = async () => {
     try {
-      setLoading(true);
       console.log('Loading cars...');
-      const data = await carsApi.getAll();
+      setLoading(true);
+      
+      const data = await carsApi.getAll().catch(err => {
+        console.error('Cars API error:', err);
+        return [];
+      });
+      
       console.log('Cars loaded:', data.length);
       setCars(data);
+      
     } catch (error) {
       console.error('Error loading cars:', error);
       setCars([]);
     } finally {
       setLoading(false);
+      console.log('Cars loading completed');
     }
   };
 

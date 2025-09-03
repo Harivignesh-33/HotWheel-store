@@ -30,16 +30,23 @@ export const CollectionsPage = () => {
 
   const loadCollections = async () => {
     try {
-      setLoading(true);
       console.log('Loading collections...');
-      const data = await collectionsApi.getAll();
+      setLoading(true);
+      
+      const data = await collectionsApi.getAll().catch(err => {
+        console.error('Collections API error:', err);
+        return [];
+      });
+      
       console.log('Collections loaded:', data.length);
       setCollections(data);
+      
     } catch (error) {
       console.error('Error loading collections:', error);
       setCollections([]);
     } finally {
       setLoading(false);
+      console.log('Collections loading completed');
     }
   };
 

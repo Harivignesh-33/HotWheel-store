@@ -45,21 +45,32 @@ export const FeaturedSection = () => {
   const fetchFeaturedData = async () => {
     try {
       console.log('Fetching featured data...');
+      setLoading(true);
+      
       const [carsData, collectionsData] = await Promise.all([
-        carsApi.getFeatured(),
-        collectionsApi.getFeatured()
+        carsApi.getFeatured().catch(err => {
+          console.error('Cars API error:', err);
+          return [];
+        }),
+        collectionsApi.getFeatured().catch(err => {
+          console.error('Collections API error:', err);
+          return [];
+        })
       ]);
-      console.log('Featured cars:', carsData.length);
-      console.log('Featured collections:', collectionsData.length);
+      
+      console.log('Featured cars loaded:', carsData.length);
+      console.log('Featured collections loaded:', collectionsData.length);
+      
       setFeaturedCars(carsData as Car[]);
       setFeaturedCollections(collectionsData as Collection[]);
+      
     } catch (error) {
       console.error('Error fetching featured data:', error);
-      // Set empty arrays on error
       setFeaturedCars([]);
       setFeaturedCollections([]);
     } finally {
       setLoading(false);
+      console.log('Loading completed');
     }
   };
 
@@ -69,8 +80,22 @@ export const FeaturedSection = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16">
-        <Loader className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col justify-center items-center py-16">
+        <Loader className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading featured content...</p>
+      </div>
+    );
+  }
+
+  // Show message if no data loaded
+  if (!loading && featuredCars.length === 0 && featuredCollections.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-2xl font-bold text-foreground mb-4">Content Coming Soon</h2>
+        <p className="text-muted-foreground mb-6">We're preparing amazing Hot Wheels content for you!</p>
+        <Button onClick={() => navigate('/cars')} variant="outline">
+          Browse All Cars
+        </Button>
       </div>
     );
   }
@@ -89,7 +114,7 @@ export const FeaturedSection = () => {
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {featuredCollections.map((collection, index) => (
+          {featuredCollections.length > 0 ? featuredCollections.map((collection, index) => (
             <Card 
               key={collection.id} 
               className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale cursor-pointer animate-fade-in"
@@ -118,7 +143,11 @@ export const FeaturedSection = () => {
                 </p>
               </CardContent>
             </Card>
-          ))}
+          )) : (
+            <div className="col-span-2 text-center py-8">
+              <p className="text-muted-foreground">No featured collections available</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -134,7 +163,7 @@ export const FeaturedSection = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredCars.map((car, index) => (
+          {featuredCars.length > 0 ? featuredCars.map((car, index) => (
             <Card 
               key={car.id} 
               className="group overflow-hidden hover:shadow-elegant transition-all duration-300 hover-scale animate-fade-in cursor-pointer"
@@ -167,7 +196,10 @@ export const FeaturedSection = () => {
                     size="sm"
                     variant="secondary"
                     className="h-8 w-8 p-0 bg-background/90 backdrop-blur-sm hover-scale"
-                    onClick={() => navigate(`/cars/${car.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/cars/${car.id}`);
+                    }}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -206,7 +238,11 @@ export const FeaturedSection = () => {
                 </Button>
               </CardFooter>
             </Card>
-          ))}
+          )) : (
+            <div className="col-span-4 text-center py-8">
+              <p className="text-muted-foreground">No featured cars available</p>
+            </div>
+          )}
         </div>
 
         <div className="text-center mt-12">
