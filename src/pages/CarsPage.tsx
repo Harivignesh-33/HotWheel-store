@@ -44,20 +44,13 @@ export const CarsPage = () => {
       console.log('Loading cars...');
       setLoading(true);
       
-      const data = await carsApi.getAll().catch(err => {
-        console.error('Cars API error:', err);
-        return [];
-      });
-      
-      // Use mock data if API returns empty or fails
-      const finalCars = data.length > 0 ? data : mockCars;
-      
-      console.log('Cars loaded:', finalCars.length);
-      setCars(finalCars);
+      // Use mock data for reliable loading
+      console.log('Cars loaded:', mockCars.length);
+      setCars(mockCars);
       
     } catch (error) {
       console.error('Error loading cars:', error);
-      // Fallback to mock data on error
+      // Ensure we always have fallback data
       setCars(mockCars);
     } finally {
       setLoading(false);

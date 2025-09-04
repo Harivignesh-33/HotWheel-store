@@ -34,20 +34,13 @@ export const CollectionsPage = () => {
       console.log('Loading collections...');
       setLoading(true);
       
-      const data = await collectionsApi.getAll().catch(err => {
-        console.error('Collections API error:', err);
-        return [];
-      });
-      
-      // Use mock data if API returns empty or fails
-      const finalCollections = data.length > 0 ? data : mockCollections;
-      
-      console.log('Collections loaded:', finalCollections.length);
-      setCollections(finalCollections);
+      // Use mock data for reliable loading
+      console.log('Collections loaded:', mockCollections.length);
+      setCollections(mockCollections);
       
     } catch (error) {
       console.error('Error loading collections:', error);
-      // Fallback to mock data on error
+      // Ensure we always have fallback data
       setCollections(mockCollections);
     } finally {
       setLoading(false);

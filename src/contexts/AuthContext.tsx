@@ -52,12 +52,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        await fetchProfile(session.user.id)
+        // Use setTimeout to prevent deadlock
+        setTimeout(() => {
+          fetchProfile(session.user.id)
+        }, 0)
       } else {
         setProfile(null)
         setLoading(false)
@@ -73,12 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       setProfile(data as Profile)
     } catch (error) {
       console.error('Error fetching profile:', error)
+      setProfile(null)
     } finally {
       setLoading(false)
     }

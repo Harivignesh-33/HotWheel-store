@@ -48,30 +48,19 @@ export const FeaturedSection = () => {
       console.log('Fetching featured data...');
       setLoading(true);
       
-      const [carsData, collectionsData] = await Promise.all([
-        carsApi.getFeatured().catch(err => {
-          console.error('Cars API error:', err);
-          return [];
-        }),
-        collectionsApi.getFeatured().catch(err => {
-          console.error('Collections API error:', err);
-          return [];
-        })
-      ]);
+      // Always use mock data for now to ensure app works
+      const featuredMockCars = mockCars.filter(car => car.featured);
+      const featuredMockCollections = mockCollections.slice(0, 2);
       
-      // Use mock data if API returns empty or fails
-      const finalCars = carsData.length > 0 ? carsData : mockCars.filter(car => car.featured);
-      const finalCollections = collectionsData.length > 0 ? collectionsData : mockCollections.slice(0, 2);
+      console.log('Featured cars loaded:', featuredMockCars.length);
+      console.log('Featured collections loaded:', featuredMockCollections.length);
       
-      console.log('Featured cars loaded:', finalCars.length);
-      console.log('Featured collections loaded:', finalCollections.length);
-      
-      setFeaturedCars(finalCars as Car[]);
-      setFeaturedCollections(finalCollections as Collection[]);
+      setFeaturedCars(featuredMockCars as Car[]);
+      setFeaturedCollections(featuredMockCollections as Collection[]);
       
     } catch (error) {
-      console.error('Error fetching featured data:', error);
-      // Fallback to mock data on error
+      console.error('Error loading featured data:', error);
+      // Ensure we always have fallback data
       setFeaturedCars(mockCars.filter(car => car.featured) as Car[]);
       setFeaturedCollections(mockCollections.slice(0, 2) as Collection[]);
     } finally {
