@@ -7,6 +7,7 @@ import { Eye, Star, ArrowRight, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { collectionsApi } from "@/lib/api";
 import { getCollectionImageUrl } from "@/lib/images";
+import { mockCollections } from "@/lib/mockData";
 // Temporary types until Supabase types are regenerated
 
 type Collection = {
@@ -38,12 +39,16 @@ export const CollectionsPage = () => {
         return [];
       });
       
-      console.log('Collections loaded:', data.length);
-      setCollections(data);
+      // Use mock data if API returns empty or fails
+      const finalCollections = data.length > 0 ? data : mockCollections;
+      
+      console.log('Collections loaded:', finalCollections.length);
+      setCollections(finalCollections);
       
     } catch (error) {
       console.error('Error loading collections:', error);
-      setCollections([]);
+      // Fallback to mock data on error
+      setCollections(mockCollections);
     } finally {
       setLoading(false);
       console.log('Collections loading completed');

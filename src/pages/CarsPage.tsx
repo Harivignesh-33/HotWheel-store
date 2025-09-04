@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { carsApi } from "@/lib/api";
 import { getCarImageUrl } from "@/lib/images";
+import { mockCars } from "@/lib/mockData";
 // Temporary types until Supabase types are regenerated
 
 type Car = {
@@ -48,12 +49,16 @@ export const CarsPage = () => {
         return [];
       });
       
-      console.log('Cars loaded:', data.length);
-      setCars(data);
+      // Use mock data if API returns empty or fails
+      const finalCars = data.length > 0 ? data : mockCars;
+      
+      console.log('Cars loaded:', finalCars.length);
+      setCars(finalCars);
       
     } catch (error) {
       console.error('Error loading cars:', error);
-      setCars([]);
+      // Fallback to mock data on error
+      setCars(mockCars);
     } finally {
       setLoading(false);
       console.log('Cars loading completed');

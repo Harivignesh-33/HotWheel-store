@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { carsApi, collectionsApi } from "@/lib/api";
 import { getCarImageUrl, getCollectionImageUrl } from "@/lib/images";
+import { mockCars, mockCollections } from "@/lib/mockData";
 
 type Car = {
   id: string;
@@ -58,16 +59,21 @@ export const FeaturedSection = () => {
         })
       ]);
       
-      console.log('Featured cars loaded:', carsData.length);
-      console.log('Featured collections loaded:', collectionsData.length);
+      // Use mock data if API returns empty or fails
+      const finalCars = carsData.length > 0 ? carsData : mockCars.filter(car => car.featured);
+      const finalCollections = collectionsData.length > 0 ? collectionsData : mockCollections.slice(0, 2);
       
-      setFeaturedCars(carsData as Car[]);
-      setFeaturedCollections(collectionsData as Collection[]);
+      console.log('Featured cars loaded:', finalCars.length);
+      console.log('Featured collections loaded:', finalCollections.length);
+      
+      setFeaturedCars(finalCars as Car[]);
+      setFeaturedCollections(finalCollections as Collection[]);
       
     } catch (error) {
       console.error('Error fetching featured data:', error);
-      setFeaturedCars([]);
-      setFeaturedCollections([]);
+      // Fallback to mock data on error
+      setFeaturedCars(mockCars.filter(car => car.featured) as Car[]);
+      setFeaturedCollections(mockCollections.slice(0, 2) as Collection[]);
     } finally {
       setLoading(false);
       console.log('Loading completed');

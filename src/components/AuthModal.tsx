@@ -41,31 +41,65 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
       return;
     }
 
+    if (mode === 'register' && formData.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       if (mode === 'login') {
         const { error } = await signIn(formData.email, formData.password);
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast({
+              title: "Login Failed",
+              description: "Invalid email or password. Please try again.",
+              variant: "destructive"
+            });
+          } else {
+            throw error;
+          }
+          return;
+        }
         
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully"
         });
+        onClose();
       } else {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
         const { error } = await signUp(formData.email, formData.password, fullName, userType);
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast({
+              title: "Account Exists",
+              description: "An account with this email already exists. Please sign in instead.",
+              variant: "destructive"
+            });
+            setMode('login');
+          } else {
+            throw error;
+          }
+          return;
+        }
         
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account"
         });
+        onClose();
       }
       
-      onClose();
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: error.message || "An error occurred during authentication",
         variant: "destructive"
       });
     }
