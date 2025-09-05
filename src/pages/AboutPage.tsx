@@ -246,7 +246,7 @@ export const AboutPage = () => {
             <Button variant="secondary" size="lg">
               Start Shopping
             </Button>
-            <Button variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+            <Button variant="outline" size="lg" className="border-primary-foreground text-black hover:bg-primary-foreground hover:text-primary">
               Contact Us
             </Button>
           </div>
