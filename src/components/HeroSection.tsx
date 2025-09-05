@@ -69,7 +69,7 @@ export const HeroSection = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary backdrop-blur-sm"
+              className="border-primary-foreground text-black hover:bg-primary-foreground hover:text-primary backdrop-blur-sm"
               onClick={() => navigate('/about')}
             >
               Learn More
