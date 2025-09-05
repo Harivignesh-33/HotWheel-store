@@ -166,7 +166,7 @@ export const CarDetailsPage = () => {
                 </div>
               </div>
               <div className="text-3xl font-bold text-primary mb-4">
-                ${car.price.toFixed(2)}
+                ₹{car.price.toFixed(2)}
               </div>
             </div>
 

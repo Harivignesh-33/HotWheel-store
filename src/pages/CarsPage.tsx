@@ -220,7 +220,7 @@ export const CarsPage = () => {
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    ${car.price.toFixed(2)}
+                    ₹{car.price.toFixed(2)}
                   </div>
                   {car.stock_quantity > 0 && (
                     <div className="text-xs text-muted-foreground">

@@ -96,7 +96,7 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Price ($)</Label>
+                  <Label>Price (₹)</Label>
                   <Input
                     type="number"
                     step="0.01"

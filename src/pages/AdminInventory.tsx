@@ -246,7 +246,7 @@ export const AdminInventory = () => {
                         <code className="text-sm bg-muted px-2 py-1 rounded">{car.id.substring(0, 8)}</code>
                       </td>
                       <td className="p-4">
-                        <div className="font-medium">${car.price}</div>
+                        <div className="font-medium">₹{car.price}</div>
                       </td>
                       <td className="p-4">
                         <div className="font-medium">{car.stock_quantity}</div>

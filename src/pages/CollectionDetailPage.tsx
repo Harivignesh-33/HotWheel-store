@@ -202,7 +202,7 @@ export const CollectionDetailPage = () => {
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-primary">
-                        ${car.price.toFixed(2)}
+                        ₹{car.price.toFixed(2)}
                       </span>
                       <Button 
                         onClick={() => handleAddToCart(car)}

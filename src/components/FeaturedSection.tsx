@@ -210,7 +210,7 @@ export const FeaturedSection = () => {
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-primary">
-                    ${car.price}
+                    ₹{car.price}
                   </span>
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

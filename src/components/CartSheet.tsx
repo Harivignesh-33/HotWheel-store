@@ -72,7 +72,7 @@ export const CartSheet = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm">{item.car.name}</h4>
-                      <p className="text-primary font-semibold">${item.car.price}</p>
+                      <p className="text-primary font-semibold">₹{item.car.price}</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -112,7 +112,7 @@ export const CartSheet = () => {
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-lg font-bold text-primary">
-                  ${getTotalAmount().toFixed(2)}
+                  ₹{getTotalAmount().toFixed(2)}
                 </span>
               </div>
               <Separator />

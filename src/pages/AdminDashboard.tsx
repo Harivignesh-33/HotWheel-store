@@ -169,7 +169,7 @@ export const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">${car.price}</div>
+                      <div className="font-medium">₹{car.price}</div>
                       <Badge 
                         variant={car.stock_quantity > 5 ? 'default' : car.stock_quantity > 0 ? 'secondary' : 'destructive'}
                         className="text-xs"
@@ -204,7 +204,7 @@ export const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">${car.price}</div>
+                      <div className="font-medium">₹{car.price}</div>
                       <div className="flex gap-2 mt-2">
                         <Button size="sm" variant="outline">
                           <Edit className="h-3 w-3" />
