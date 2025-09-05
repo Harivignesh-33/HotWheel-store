@@ -196,7 +196,7 @@ export const CollectionsPage = () => {
             <Button variant="secondary" size="lg" onClick={() => navigate('/cars')}>
               Browse All Cars
             </Button>
-            <Button variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+            <Button variant="outline" size="lg" className="border-primary-foreground text-black hover:bg-primary-foreground hover:text-primary">
               Contact Us
             </Button>
           </div>
