@@ -122,7 +122,7 @@ export const mockCollections = [
     name: 'Luxury Line',
     description: 'Premium vehicles that combine elegance with performance.',
     image_url: 'black-luxury.jpg',
-    featured: false,
+    featured: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -131,6 +131,51 @@ export const mockCollections = [
     name: 'Off-Road Warriors',
     description: 'Rugged vehicles built to conquer any terrain.',
     image_url: 'green-monster.jpg',
+    featured: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '5',
+    name: 'Drift Masters',
+    description: 'Sideways specialists designed for the art of controlled sliding.',
+    image_url: 'purple-drift.jpg',
+    featured: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '6',
+    name: 'Future Tech',
+    description: 'Cutting-edge supercars representing the future of automotive design.',
+    image_url: 'silver-supercar.jpg',
+    featured: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '7',
+    name: 'Racing Legends',
+    description: 'Iconic race cars that made history on famous tracks around the world.',
+    image_url: 'orange-sports.jpg',
+    featured: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '8',
+    name: 'Street Racers',
+    description: 'Urban warriors built for city streets and midnight runs.',
+    image_url: 'blue-racer.jpg',
+    featured: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '9',
+    name: 'Vintage Classics',
+    description: 'Timeless automobiles from the golden age of motoring.',
+    image_url: 'yellow-muscle.jpg',
     featured: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()

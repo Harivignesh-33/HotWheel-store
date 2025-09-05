@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import { CarsPage } from "./pages/CarsPage";
 import { CarDetailsPage } from "./pages/CarDetailsPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
+import { CollectionDetailPage } from "./pages/CollectionDetailPage";
 import { AboutPage } from "./pages/AboutPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
@@ -30,7 +31,7 @@ const App = () => (
               <Route path="/cars" element={<CarsPage />} />
               <Route path="/cars/:id" element={<CarDetailsPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
-              <Route path="/collections/:id" element={<CollectionsPage />} />
+              <Route path="/collections/:id" element={<CollectionDetailPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<LoginPage />} />
