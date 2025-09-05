@@ -41,10 +41,21 @@ export const CarDetailsPage = () => {
   const loadCar = async (carId: string) => {
     try {
       setLoading(true);
-      const data = await carsApi.getById(carId);
-      setCar(data);
+      
+      // Try API first, fallback to mock data
+      try {
+        const data = await carsApi.getById(carId);
+        setCar(data);
+      } catch (apiError) {
+        console.log('API failed, using mock data');
+        // Import mock data
+        const { mockCars } = await import('@/lib/mockData');
+        const mockCar = mockCars.find(car => car.id === carId);
+        setCar(mockCar || null);
+      }
     } catch (error) {
       console.error('Error loading car:', error);
+      setCar(null);
     } finally {
       setLoading(false);
     }
