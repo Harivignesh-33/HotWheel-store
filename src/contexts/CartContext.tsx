@@ -56,7 +56,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('cart_items')
+        .from('cart_items' as any)
         .select(`
           *,
           car:cars(id, name, price, image_url, stock_quantity)
@@ -64,7 +64,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', user.id)
 
       if (error) throw error
-      setCartItems(data || [])
+      setCartItems((data || []) as unknown as CartItem[])
     } catch (error) {
       console.error('Error fetching cart items:', error)
       toast({
@@ -95,7 +95,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await updateQuantity(carId, existingItem.quantity + quantity)
       } else {
         const { error } = await supabase
-          .from('cart_items')
+          .from('cart_items' as any)
           .insert({
             user_id: user.id,
             car_id: carId,
@@ -125,7 +125,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { error } = await supabase
-        .from('cart_items')
+        .from('cart_items' as any)
         .delete()
         .eq('user_id', user.id)
         .eq('car_id', carId)
@@ -157,7 +157,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { error } = await supabase
-        .from('cart_items')
+        .from('cart_items' as any)
         .update({ quantity })
         .eq('user_id', user.id)
         .eq('car_id', carId)
@@ -179,7 +179,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { error } = await supabase
-        .from('cart_items')
+        .from('cart_items' as any)
         .delete()
         .eq('user_id', user.id)
 
