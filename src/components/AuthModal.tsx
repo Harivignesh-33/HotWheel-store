@@ -97,6 +97,17 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
       
     } catch (error: any) {
       console.error('Auth error:', error);
+      
+      // Handle network/connection errors
+      if (error.message === 'Failed to fetch' || error.name === 'AuthRetryableFetchError') {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to the server. The database may be paused or there's a network issue. Please try again in a moment.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       toast({
         title: "Error",
         description: error.message || "An error occurred during authentication",
