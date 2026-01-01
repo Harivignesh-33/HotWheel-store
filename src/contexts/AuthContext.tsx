@@ -8,6 +8,8 @@ interface Profile {
   email: string
   full_name: string | null
   role: 'customer' | 'admin'
+  created_at: string
+  updated_at: string
 }
 
 interface AuthContextType {
