@@ -187,7 +187,7 @@ export const AboutPage = () => {
                 <h3 className="font-semibold text-foreground mb-2">Worldwide Shipping</h3>
                 <p className="text-muted-foreground text-sm">
                   Fast, secure shipping to over 40 countries with tracking and insurance included. 
-                  Free shipping on orders over $25.
+                  Free shipping on orders over ₹500.
                 </p>
               </div>
             </div>

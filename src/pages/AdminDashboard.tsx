@@ -1,32 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdminAddForm } from "@/components/AdminAddForm";
+import { AdminEditForm } from "@/components/AdminEditForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { carsApi, collectionsApi } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  DollarSign, 
   Package, 
   ShoppingCart, 
   TrendingUp, 
   Plus, 
   Eye, 
   Edit, 
-  Trash2,
-  Search,
-  Filter,
-  Users,
-  Star
+  Star,
+  IndianRupee
 } from "lucide-react";
+
+interface Car {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  collection_id: string | null;
+  image_url: string | null;
+  stock_quantity: number;
+  featured: boolean;
+}
 
 export const AdminDashboard = () => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
 
   // Fetch cars and collections data
   const { data: cars = [], isLoading: carsLoading } = useQuery({
@@ -60,6 +70,14 @@ export const AdminDashboard = () => {
   const totalRevenue = cars.reduce((sum, car) => sum + (car.price * (car.stock_quantity || 0)), 0);
   const featuredItems = cars.filter(car => car.featured).length + collections.filter(col => col.featured).length;
 
+  const handleEditCar = (car: Car) => {
+    setEditingCar(car);
+  };
+
+  const handleRestockCar = (car: Car) => {
+    setEditingCar(car);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -92,10 +110,10 @@ export const AdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <IndianRupee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 Total inventory value
               </p>
@@ -206,10 +224,10 @@ export const AdminDashboard = () => {
                     <div className="text-right">
                       <div className="font-medium">₹{car.price}</div>
                       <div className="flex gap-2 mt-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleEditCar(car)}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => handleRestockCar(car)}>
                           Restock
                         </Button>
                       </div>
@@ -260,6 +278,7 @@ export const AdminDashboard = () => {
               onClose={() => setShowAddForm(false)}
               onSuccess={() => {
                 setShowAddForm(false);
+                queryClient.invalidateQueries({ queryKey: ['cars'] });
                 toast({
                   title: "Success",
                   description: "Product added successfully",
@@ -267,6 +286,20 @@ export const AdminDashboard = () => {
               }}
             />
           </div>
+        )}
+
+        {/* Edit Product Modal */}
+        {editingCar && (
+          <AdminEditForm
+            isOpen={!!editingCar}
+            type="car"
+            item={editingCar}
+            onClose={() => setEditingCar(null)}
+            onSuccess={() => {
+              setEditingCar(null);
+              queryClient.invalidateQueries({ queryKey: ['cars'] });
+            }}
+          />
         )}
       </div>
     </div>

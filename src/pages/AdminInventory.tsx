@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminAddForm } from "@/components/AdminAddForm";
+import { AdminEditForm } from "@/components/AdminEditForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { carsApi } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,12 +17,31 @@ import {
   Search, 
   Edit, 
   Trash2, 
-  Eye, 
-  Upload,
+  Eye,
   Package,
-  DollarSign,
   AlertTriangle
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface Car {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  collection_id: string | null;
+  image_url: string | null;
+  stock_quantity: number;
+  featured: boolean;
+}
 
 export const AdminInventory = () => {
   const { isAdmin } = useAuth();
@@ -30,9 +50,11 @@ export const AdminInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
+  const [deletingCarId, setDeletingCarId] = useState<string | null>(null);
 
   // Fetch cars data
-  const { data: cars = [], isLoading, refetch } = useQuery({
+  const { data: cars = [], isLoading } = useQuery({
     queryKey: ['cars'],
     queryFn: carsApi.getAll
   });
@@ -56,7 +78,7 @@ export const AdminInventory = () => {
 
   const filteredInventory = cars.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all"; // Simplified for now
+    const matchesCategory = selectedCategory === "all";
     return matchesSearch && matchesCategory;
   });
 
@@ -70,9 +92,11 @@ export const AdminInventory = () => {
     }
   };
 
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async () => {
+    if (!deletingCarId) return;
+    
     try {
-      await carsApi.delete(id);
+      await carsApi.delete(deletingCarId);
       queryClient.invalidateQueries({ queryKey: ['cars'] });
       toast({
         title: "Success",
@@ -84,7 +108,34 @@ export const AdminInventory = () => {
         description: "Failed to delete product",
         variant: "destructive",
       });
+    } finally {
+      setDeletingCarId(null);
     }
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Name', 'Description', 'Price', 'Stock', 'Featured'];
+    const rows = cars.map(car => [
+      car.name,
+      car.description || '',
+      car.price.toString(),
+      car.stock_quantity.toString(),
+      car.featured ? 'Yes' : 'No'
+    ]);
+    
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Exported",
+      description: "Inventory exported to CSV",
+    });
   };
 
   return (
@@ -117,7 +168,7 @@ export const AdminInventory = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
-                    placeholder="Search by name or SKU..."
+                    placeholder="Search by name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -140,7 +191,7 @@ export const AdminInventory = () => {
                 </Select>
               </div>
               <div className="flex items-end">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleExportCSV}>
                   Export CSV
                 </Button>
               </div>
@@ -259,13 +310,13 @@ export const AdminInventory = () => {
                           <Button variant="outline" size="sm" onClick={() => window.open(`/cars/${car.id}`, '_blank')}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => setEditingCar(car)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleDeleteProduct(car.id)}
+                            onClick={() => setDeletingCarId(car.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -275,6 +326,11 @@ export const AdminInventory = () => {
                   ))}
                 </tbody>
               </table>
+              {filteredInventory.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No products found
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -297,6 +353,36 @@ export const AdminInventory = () => {
             />
           </div>
         )}
+
+        {/* Edit Product Modal */}
+        {editingCar && (
+          <AdminEditForm
+            isOpen={!!editingCar}
+            type="car"
+            item={editingCar}
+            onClose={() => setEditingCar(null)}
+            onSuccess={() => {
+              setEditingCar(null);
+              queryClient.invalidateQueries({ queryKey: ['cars'] });
+            }}
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deletingCarId} onOpenChange={() => setDeletingCarId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Product</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this product? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteProduct}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

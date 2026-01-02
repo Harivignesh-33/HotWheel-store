@@ -242,7 +242,7 @@ export const CarDetailsPage = () => {
                   <Truck className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Free Shipping</p>
-                    <p className="text-sm text-muted-foreground">On orders over $25</p>
+                    <p className="text-sm text-muted-foreground">On orders over ₹500</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
