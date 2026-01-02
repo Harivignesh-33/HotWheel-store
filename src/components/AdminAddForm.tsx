@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ImageUpload";
 import { carsApi, collectionsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,9 +27,11 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
     category: '',
     featured: false
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
       if (type === 'car') {
@@ -38,7 +41,7 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
           price: parseFloat(formData.price),
           stock_quantity: parseInt(formData.stockQuantity),
           image_url: formData.imageUrl,
-          collection_id: formData.category, // Using category as collection_id for now
+          collection_id: formData.category || null,
           featured: formData.featured
         });
         toast({ title: "Success", description: "Car added successfully" });
@@ -58,23 +61,33 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
       });
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add " + type,
+        description: error.message || "Failed to add " + type,
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New {type === 'car' ? 'Car' : 'Collection'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Product Image</Label>
+            <ImageUpload
+              value={formData.imageUrl}
+              onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Name</Label>
             <Input
@@ -135,15 +148,6 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
             </>
           )}
 
-          <div className="space-y-2">
-            <Label>Image (use: red-speedster.jpg, blue-racer.jpg, etc.)</Label>
-            <Input
-              value={formData.imageUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-              placeholder="red-speedster.jpg"
-            />
-          </div>
-
           <div className="flex items-center space-x-2">
             <Switch
               checked={formData.featured}
@@ -152,8 +156,8 @@ export const AdminAddForm = ({ isOpen, onClose, type, onSuccess }: AdminAddFormP
             <Label>Featured</Label>
           </div>
 
-          <Button type="submit" className="w-full">
-            Add {type === 'car' ? 'Car' : 'Collection'}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding...' : `Add ${type === 'car' ? 'Car' : 'Collection'}`}
           </Button>
         </form>
       </DialogContent>

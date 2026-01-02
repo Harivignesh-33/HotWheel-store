@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/ImageUpload";
 import { carsApi, collectionsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
@@ -203,11 +204,10 @@ export const AdminEditForm = ({ isOpen, onClose, type, item, onSuccess }: AdminE
           )}
 
           <div className="space-y-2">
-            <Label>Image URL</Label>
-            <Input
+            <Label>Product Image</Label>
+            <ImageUpload
               value={formData.imageUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-              placeholder="red-speedster.jpg"
+              onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
             />
           </div>
 
