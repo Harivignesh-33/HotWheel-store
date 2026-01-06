@@ -45,22 +45,24 @@ export const FeaturedSection = () => {
 
   const fetchFeaturedData = async () => {
     try {
-      console.log('Fetching featured data...');
+      console.log('Fetching featured data from database...');
       setLoading(true);
       
-      // Always use mock data for now to ensure app works
-      const featuredMockCars = mockCars.filter(car => car.featured);
-      const featuredMockCollections = mockCollections.slice(0, 2);
+      // Fetch from database
+      const [carsResult, collectionsResult] = await Promise.all([
+        carsApi.getFeatured(),
+        collectionsApi.getFeatured()
+      ]);
       
-      console.log('Featured cars loaded:', featuredMockCars.length);
-      console.log('Featured collections loaded:', featuredMockCollections.length);
+      console.log('Featured cars loaded:', carsResult.length);
+      console.log('Featured collections loaded:', collectionsResult.length);
       
-      setFeaturedCars(featuredMockCars as Car[]);
-      setFeaturedCollections(featuredMockCollections as Collection[]);
+      setFeaturedCars(carsResult as Car[]);
+      setFeaturedCollections(collectionsResult as Collection[]);
       
     } catch (error) {
       console.error('Error loading featured data:', error);
-      // Ensure we always have fallback data
+      // Fallback to mock data if database fails
       setFeaturedCars(mockCars.filter(car => car.featured) as Car[]);
       setFeaturedCollections(mockCollections.slice(0, 2) as Collection[]);
     } finally {
