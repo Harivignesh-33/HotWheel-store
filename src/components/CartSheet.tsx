@@ -6,6 +6,7 @@ import { ShoppingCart, Plus, Minus, Trash2, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
+import { getCarImageUrl } from "@/lib/images";
 
 export const CartSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +67,7 @@ export const CartSheet = () => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex items-center space-x-4 bg-card rounded-lg p-4">
                     <img
-                      src={item.car.image_url}
+                      src={getCarImageUrl(item.car.image_url)}
                       alt={item.car.name}
                       className="h-16 w-16 rounded-md object-cover"
                     />
