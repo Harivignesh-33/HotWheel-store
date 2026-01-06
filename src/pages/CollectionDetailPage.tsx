@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart, Star, Loader } from "lucide-react";
-import { mockCollections, mockCars } from "@/lib/mockData";
 import { getCarImageUrl, getCollectionImageUrl } from "@/lib/images";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { collectionsApi, carsApi } from "@/lib/api";
 
 type Collection = {
   id: string;
@@ -51,13 +51,15 @@ export const CollectionDetailPage = () => {
     try {
       setLoading(true);
       
-      // Find collection in mock data
-      const foundCollection = mockCollections.find(c => c.id === collectionId);
+      // Fetch collection from database
+      const allCollections = await collectionsApi.getAll();
+      const foundCollection = allCollections.find((c: any) => c.id === collectionId);
       setCollection(foundCollection || null);
       
-      // For demo purposes, show a curated selection of cars based on collection theme
-      const collectionCars = getCollectionCars(collectionId);
-      setCars(collectionCars);
+      // Fetch all cars and show featured ones for the collection
+      const allCars = await carsApi.getAll();
+      // Show featured cars or first few cars for the collection
+      setCars(allCars.slice(0, 6) as Car[]);
       
     } catch (error) {
       console.error('Error loading collection:', error);
@@ -66,24 +68,6 @@ export const CollectionDetailPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getCollectionCars = (collectionId: string): Car[] => {
-    // Map collection themes to specific cars
-    const collectionCarMapping: { [key: string]: string[] } = {
-      '1': ['1', '2', '7'], // Speed Demons - fast cars
-      '2': ['3', '8'], // Classic Muscle  
-      '3': ['5', '7'], // Luxury Line
-      '4': ['4'], // Off-Road Warriors
-      '5': ['6'], // Drift Masters
-      '6': ['7', '8'], // Future Tech
-      '7': ['1', '2', '8'], // Racing Legends
-      '8': ['2', '6'], // Street Racers
-      '9': ['3', '5'] // Vintage Classics
-    };
-
-    const carIds = collectionCarMapping[collectionId] || [];
-    return mockCars.filter(car => carIds.includes(car.id));
   };
 
   const handleAddToCart = (car: Car) => {

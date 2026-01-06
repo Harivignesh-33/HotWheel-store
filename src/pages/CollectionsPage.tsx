@@ -31,17 +31,17 @@ export const CollectionsPage = () => {
 
   const loadCollections = async () => {
     try {
-      console.log('Loading collections...');
+      console.log('Loading collections from database...');
       setLoading(true);
       
-      // Use mock data for reliable loading
-      console.log('Collections loaded:', mockCollections.length);
-      setCollections(mockCollections);
+      const data = await collectionsApi.getAll();
+      console.log('Collections loaded:', data.length);
+      setCollections(data as Collection[]);
       
     } catch (error) {
       console.error('Error loading collections:', error);
-      // Ensure we always have fallback data
-      setCollections(mockCollections);
+      // Fallback to mock data
+      setCollections(mockCollections as Collection[]);
     } finally {
       setLoading(false);
       console.log('Collections loading completed');
