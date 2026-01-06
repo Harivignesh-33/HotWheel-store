@@ -41,17 +41,17 @@ export const CarsPage = () => {
 
   const loadCars = async () => {
     try {
-      console.log('Loading cars...');
+      console.log('Loading cars from database...');
       setLoading(true);
       
-      // Use mock data for reliable loading
-      console.log('Cars loaded:', mockCars.length);
-      setCars(mockCars);
+      const data = await carsApi.getAll();
+      console.log('Cars loaded:', data.length);
+      setCars(data as Car[]);
       
     } catch (error) {
       console.error('Error loading cars:', error);
-      // Ensure we always have fallback data
-      setCars(mockCars);
+      // Fallback to mock data
+      setCars(mockCars as Car[]);
     } finally {
       setLoading(false);
       console.log('Cars loading completed');
