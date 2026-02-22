@@ -19,6 +19,7 @@ import {
   Star,
   IndianRupee
 } from "lucide-react";
+import { getCarImageUrl } from "@/lib/images";
 
 interface Car {
   id: string;
@@ -177,7 +178,7 @@ export const AdminDashboard = () => {
                   <div key={car.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <img 
-                        src={car.image_url || "/api/placeholder/50/50"} 
+                        src={getCarImageUrl(car.image_url)} 
                         alt={car.name}
                         className="w-12 h-12 rounded object-cover"
                       />
