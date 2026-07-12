@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,12 @@ export const CartSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { cartItems, loading, updateQuantity, removeFromCart, getTotalAmount, getTotalItems } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (cartItems.length === 0) return;
-    
-    // TODO: Implement Stripe checkout
-    console.log('Proceeding to checkout with items:', cartItems);
+    setIsOpen(false);
+    navigate("/checkout");
   };
 
   if (!user) {

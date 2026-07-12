@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Car, Menu, User, X, LogOut, Settings } from "lucide-react";
+import { Car, Menu, User, X, LogOut, Settings, Package, ClipboardList } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CartSheet } from "./CartSheet";
@@ -96,11 +96,20 @@ export const Navigation = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    <Package className="h-4 w-4 mr-2" />
+                    My Orders
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/admin')}>
                         <Settings className="h-4 w-4 mr-2" />
                         Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/orders')}>
+                        <ClipboardList className="h-4 w-4 mr-2" />
+                        Manage Orders
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
