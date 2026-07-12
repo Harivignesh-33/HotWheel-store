@@ -258,9 +258,9 @@ export const AdminDashboard = () => {
                 <Package className="h-6 w-6 mb-2" />
                 Manage Inventory
               </Button>
-              <Button variant="outline" className="h-20 flex-col" onClick={() => window.open('/cars', '_blank')}>
+              <Button variant="outline" className="h-20 flex-col" onClick={() => window.location.assign('/admin/orders')}>
                 <ShoppingCart className="h-6 w-6 mb-2" />
-                View Store
+                Manage Orders
               </Button>
               <Button variant="outline" className="h-20 flex-col" onClick={() => window.open('/collections', '_blank')}>
                 <TrendingUp className="h-6 w-6 mb-2" />
